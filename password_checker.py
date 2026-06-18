@@ -1,4 +1,5 @@
 import string,re
+import requests,hashlib
 class PasswordChecker:
     def __init__(self,password):
         """Constructor to initialise the user's password to a variable
@@ -77,12 +78,65 @@ class PasswordChecker:
             # Fallback if the text file isn't in the directory
             return True
 
+    def check_pwned_api(self):
+        """Method to check if passwrod involved in a data breach
+
+        Returns:
+            boolean: if password in a data breach
+        """
+        # Step 1: Hash the password using SHA-1
+        sha1_password = hashlib.sha1(self.password.encode('utf-8')).hexdigest().upper()
+        
+        # Step 2: Split into 5-character prefix and the remaining suffix
+        prefix = sha1_password[:5]
+        suffix = sha1_password[5:]
+
+        # Step 3: Query the API with ONLY the prefix
+        url = f"https://api.pwnedpasswords.com/range/{prefix}"
+
+        try:
+            # Setting a user-agent header is a standard requirement for APIs
+            headers = {'User-Agent': 'Student-Project'}
+            response = requests.get(url, headers=headers, timeout=5)
+            
+            if response.status_code != 200:
+                print(f"Error fetching data from API: Status code {response.status_code}")
+                return False
+                
+            # Step 4: Parse the response. The API returns lines of "SUFFIX:COUNT"
+            hashes = (line.split(':') for line in response.text.splitlines())
+            
+            # Step 5: Check if our suffix matches any in the returned list
+            for target_suffix, count in hashes:
+                if target_suffix == suffix:
+                    return int(count)  # Found a match! Return breach count.
+            
+            return False  # Password was not found in any data breaches
+        except requests.RequestException as e:
+            print(f"API connection error: {e}")
+            return False
+
     def calculate_score(self):
-        # 1. Check if it's a blacklisted common password
+        """Method to calcuate the score, if password common or pwned, immediatley very weak
+
+        Returns:
+            string: strength of the password
+        """
+
+        # 1. Local Check if it's a blacklisted common password
         if not self.check_common_passwords():
             return "Very weak"
+
+        # 2. Check the API result
+        leak_result = self.check_pwned_api()
+
+        # If leak_result is an integer count greater than 0, it has been compromised
+        if leak_result:  
+            return f"Very Weak (Compromised in {leak_result:,} data breaches!)"
+
+        
             
-        # 2. Sum up the points from individual criteria
+        # 3. Sum up the points from individual criteria
         score = 0
         score += self.check_length()
         score += int(self.check_uppercase())
@@ -90,7 +144,7 @@ class PasswordChecker:
         score += int(self.check_numbers())
         score += int(self.check_special_characters())
         
-        # 3. Determine strength classification (Max possible score is 6)
+        # 4. Determine strength classification (Max possible score is 6)
         if score <= 2:
             return "Weak"
         elif score <= 4:
@@ -101,33 +155,35 @@ class PasswordChecker:
             return "Very Strong"
 
 def main():
-    # Testing with actual examples from your common passwords list, 
-    # plus some secure variations to verify all scoring tiers.
     test_cases = [
-        # Should be caught by your text file (Very Weak)
-        ("123456", "Should be 'Very weak' (Matches the list)"),
-        ("password", "Should be 'Very weak' (Matches the list)"),
-        ("qwerty", "Should be 'Very weak' (Matches the list)"),
+        # 1. Local File Check (Triggers first, skips the API call entirely)
+        ("qwerty", "Should be 'Very weak' (Caught locally in <1ms)"),
         
-        # Testing length and character types (Not in your list)
-        ("abc", "Should be 'Weak' (Too short, only lowercase)"),
-        ("P@ss1", "Should be 'Fair' (Has variety, but under 8 characters)"),
-        ("YorkUni2026!", "Should be 'Strong' (Meets length and character variety)"),
-        ("Correct-Horse-Battery-Staple-2026!", "Should be 'Very Strong' (Hits the 16+ character bonus length)")
+        # 2. API Leaked Check (Passes local file, caught by the internet)
+        ("Password123!", "Should be 'Very Weak' (Caught by HIBP API)"),
+        
+        # 3. API Low-Leak Check (Passes local file, caught by the internet)
+        ("python123", "Should be 'Very Weak' (Caught by HIBP API)"),
+        
+        # 4. Clean Passwords (Passes both, calculates score criteria)
+        ("abc", "Should be 'Weak' (Too short)"),
+        ("P@ss1", "Should be 'Fair' (Under 8 chars)"),
+        ("YorkComputerScience2026!", "Should be 'Very Strong' (Hits 16+ character bonus)"),
+        ("Correct-Horse-Battery-Staple-2026!", "Should be 'Very Strong'")
     ]
     
-    print("=" * 70)
-    print(" PASSWORD CHECKER PERFORMANCE TEST ")
-    print("=" * 70)
+    print("=" * 85)
+    print(" PASSWORD CHECKER INTEGRATION TEST SUITE ")
+    print("=" * 85)
     print(f"{'Password Tested':<40} | {'Expected Classification':<25} | {'Actual Result'}")
-    print("-" * 70)
+    print("-" * 85)
     
     for pwd, expectation in test_cases:
         checker = PasswordChecker(pwd)
         result = checker.calculate_score()
         
-        # Prints everything in a clean, aligned table format
-        print(f"'{pwd}':<40 | {expectation:<25} | {result}")
+        print(f"{pwd:<40} | {expectation:<25} | {result}")
+        print("-" * 85)
 
 if __name__ == "__main__":
     main()
