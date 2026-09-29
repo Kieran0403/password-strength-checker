@@ -79,23 +79,27 @@ class PasswordChecker:
             return True
 
     def check_pwned_api(self):
-        """Method to check if passwrod involved in a data breach
+        """Method to check if passwrod involved in a data breach.
+
+        The HaveIbeenPwned API will return a list of all breached password hashes with the same prefix as the 
+        one of the input, and then the function compares them to suffix generated from the input to see if
+        the suffixes match. If suffixes match, both hashes ar ethe same, therefore can prove they are the smae password.
 
         Returns:
             boolean: if password in a data breach
         """
-        # Step 1: Hash the password using SHA-1
+        #Hash the password using SHA-1
         sha1_password = hashlib.sha1(self.password.encode('utf-8')).hexdigest().upper()
         
-        # Step 2: Split into 5-character prefix and the remaining suffix
+        #Split into 5-character prefix and the remaining suffix
         prefix = sha1_password[:5]
         suffix = sha1_password[5:]
 
-        # Step 3: Query the API with ONLY the prefix
+        # Query the API with ONLY the prefix
         url = f"https://api.pwnedpasswords.com/range/{prefix}"
 
         try:
-            # Setting a user-agent header is a standard requirement for APIs
+            # Set a header to access the API
             headers = {'User-Agent': 'Student-Project'}
             response = requests.get(url, headers=headers, timeout=5)
             
@@ -103,10 +107,10 @@ class PasswordChecker:
                 print(f"Error fetching data from API: Status code {response.status_code}")
                 return False
                 
-            # Step 4: Parse the response. The API returns lines of "SUFFIX:COUNT"
+            #Parse the response. The API returns lines with suffix and count
             hashes = (line.split(':') for line in response.text.splitlines())
             
-            # Step 5: Check if our suffix matches any in the returned list
+            #Check if inputted hashed password suffix matches any in the returned list
             for target_suffix, count in hashes:
                 if target_suffix == suffix:
                     return int(count)  # Found a match! Return breach count.
