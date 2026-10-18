@@ -134,8 +134,10 @@ class PasswordChecker:
         # 2. Check the API result
         leak_result = self.check_pwned_api()
 
-        # If leak_result is an integer count greater than 0, it has been compromised
-        if leak_result:  
+        if leak_result is None:
+            return "Unable to verify breach status; strength not rated" #An error occured
+
+        if leak_result > 0:
             return f"Very Weak (Compromised in {leak_result:,} data breaches!)"
 
         
@@ -157,37 +159,3 @@ class PasswordChecker:
             return "Strong"
         else:
             return "Very Strong"
-
-def main():
-    test_cases = [
-        # 1. Local File Check (Triggers first, skips the API call entirely)
-        ("qwerty", "Should be 'Very weak' (Caught locally in <1ms)"),
-        
-        # 2. API Leaked Check (Passes local file, caught by the internet)
-        ("Password123!", "Should be 'Very Weak' (Caught by HIBP API)"),
-        
-        # 3. API Low-Leak Check (Passes local file, caught by the internet)
-        ("python123", "Should be 'Very Weak' (Caught by HIBP API)"),
-        
-        # 4. Clean Passwords (Passes both, calculates score criteria)
-        ("abc", "Should be 'Weak' (Too short)"),
-        ("P@ss1", "Should be 'Fair' (Under 8 chars)"),
-        ("YorkComputerScience2026!", "Should be 'Very Strong' (Hits 16+ character bonus)"),
-        ("Correct-Horse-Battery-Staple-2026!", "Should be 'Very Strong'")
-    ]
-    
-    print("=" * 85)
-    print(" PASSWORD CHECKER INTEGRATION TEST SUITE ")
-    print("=" * 85)
-    print(f"{'Password Tested':<40} | {'Expected Classification':<25} | {'Actual Result'}")
-    print("-" * 85)
-    
-    for pwd, expectation in test_cases:
-        checker = PasswordChecker(pwd)
-        result = checker.calculate_score()
-        
-        print(f"{pwd:<40} | {expectation:<25} | {result}")
-        print("-" * 85)
-
-if __name__ == "__main__":
-    main()

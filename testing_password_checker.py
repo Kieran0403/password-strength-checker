@@ -38,3 +38,9 @@ class TestPasswordCheckerCharacterTypes(unittest.TestCase):
     def test_special_characters(self):
         self.assertTrue(PasswordChecker("hello@world!").check_special_characters())
         self.assertFalse(PasswordChecker("helloworld123").check_special_characters())
+
+class TestPasswordCheckerCommonPasswords(unittest.TestCase):
+
+    def test_passwords_txt(self):
+        self.assertTrue(PasswordChecker("tuygbvnrdgkjughrdjkesugvh").check_common_passwords())
+        self.assertFalse(PasswordChecker("12345").check_common_passwords())
