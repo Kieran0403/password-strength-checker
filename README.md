@@ -38,5 +38,6 @@ To check if a password has been compromised in historical data breaches without 
 ## 📦 Project Structure & Workflow
 
 ```text
-├── PasswordChecker.py              # Main class containing regex filters & scoring algorithms
+├── password_checker.py             # Main class containing regex filters & scoring algorithms
+├── testing_password_checker.py     # Unit testing file to test passwords and individual methods
 └── 1000-most-common-passwords.txt  # Fast local O(1) dictionary lookup file
