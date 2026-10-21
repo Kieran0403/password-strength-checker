@@ -25,14 +25,6 @@ class PasswordChecker:
         else:
             return 0
 
-    def check_special_chars(self):
-        """Checks if the password contains any special characters
-
-        Returns:
-            boolean: if contains special chars
-        """
-        special_chars=string.punctuation #All the special chars from import
-        return special_chars in self.password
             
     def check_uppercase(self):
         """Checks if the string contains uppercase characters
