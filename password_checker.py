@@ -56,7 +56,7 @@ class PasswordChecker:
         """
         return bool(re.search(r'[!"#$%&\'()*+,\-./:;<=>?@[\]^_`{|}~]', self.password))
     
-    def check_common_passwords(self):
+    def is_common_password(self):
         """Checks text file of 1000 most common passwords and checks if user password is in that list
 
         Returns:
@@ -65,20 +65,20 @@ class PasswordChecker:
         try:
             with open("1000-most-common-passwords.txt") as f:
                 common_passwords = set(f.read().splitlines())
-            return self.password.lower() not in common_passwords
+            return self.password.lower() in common_passwords
         except FileNotFoundError:
             # Fallback if the text file isn't in the directory
             return True
 
     def check_pwned_api(self):
-        """Method to check if passwrod involved in a data breach.
+        """Method to check if password involved in a data breach.
 
         The HaveIbeenPwned API will return a list of all breached password hashes with the same prefix as the 
         one of the input, and then the function compares them to suffix generated from the input to see if
-        the suffixes match. If suffixes match, both hashes ar ethe same, therefore can prove they are the smae password.
+        the suffixes match. If suffixes match, both hashes are the same, therefore can prove they are the smae password.
 
         Returns:
-            boolean: if password in a data breach
+            int: number of instances the passwrod is in a data breach
         """
         #Hash the password using SHA-1 (No longer secure)
         sha1_password = hashlib.sha1(self.password.encode('utf-8')).hexdigest().upper()
@@ -121,7 +121,7 @@ class PasswordChecker:
         """
 
         # 1. Local Check if it's a blacklisted common password
-        if not self.check_common_passwords():
+        if self.is_common_password():
             return "Very weak"
 
         # 2. Check the API result

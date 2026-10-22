@@ -45,8 +45,8 @@ class TestPasswordCheckerCommonPasswords(unittest.TestCase):
     """
 
     def test_passwords_txt(self):
-        self.assertTrue(PasswordChecker("tuygbvnrdgkjughrdjkesugvh").check_common_passwords())
-        self.assertFalse(PasswordChecker("12345").check_common_passwords())
+        self.assertFalse(PasswordChecker("tuygbvnrdgkjughrdjkesugvh").is_common_password())
+        self.assertTrue(PasswordChecker("12345").is_common_password())
     
     def test_passwords_api(self):
         self.assertEqual(PasswordChecker("rugthrtfjkvdrsfkjghdghdeugvdeju").check_pwned_api(),0);
