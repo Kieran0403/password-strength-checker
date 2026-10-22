@@ -57,7 +57,7 @@ class PasswordChecker:
         return bool(re.search(r'[!"#$%&\'()*+,\-./:;<=>?@[\]^_`{|}~]', self.password))
     
     def check_common_passwords(self):
-        """CHecks text file of 1000 most common passwords and checks if user password is in that list
+        """Checks text file of 1000 most common passwords and checks if user password is in that list
 
         Returns:
             boolean: returns if the password is NOT in the list
@@ -80,7 +80,7 @@ class PasswordChecker:
         Returns:
             boolean: if password in a data breach
         """
-        #Hash the password using SHA-1
+        #Hash the password using SHA-1 (No longer secure)
         sha1_password = hashlib.sha1(self.password.encode('utf-8')).hexdigest().upper()
         
         #Split into 5-character prefix and the remaining suffix
@@ -91,8 +91,9 @@ class PasswordChecker:
         url = f"https://api.pwnedpasswords.com/range/{prefix}"
 
         try:
-            # Set a header to access the API
+            # Set a header to pass to the API
             headers = {'User-Agent': 'Student-Project'}
+            #Contact the API with the relevant info
             response = requests.get(url, headers=headers, timeout=5)
             
             if response.status_code != 200:
@@ -105,7 +106,7 @@ class PasswordChecker:
             #Check if inputted hashed password suffix matches any in the returned list
             for target_suffix, count in hashes:
                 if target_suffix == suffix:
-                    return int(count)  # Found a match! Return breach count.
+                    return int(count)  # Found a match and return breach count.
             
             return False  # Password was not found in any data breaches
         except requests.RequestException as e:

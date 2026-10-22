@@ -40,7 +40,15 @@ class TestPasswordCheckerCharacterTypes(unittest.TestCase):
         self.assertFalse(PasswordChecker("helloworld123").check_special_characters())
 
 class TestPasswordCheckerCommonPasswords(unittest.TestCase):
+    """Unit tests to check if passwords are common using local file and API
+
+    """
 
     def test_passwords_txt(self):
         self.assertTrue(PasswordChecker("tuygbvnrdgkjughrdjkesugvh").check_common_passwords())
         self.assertFalse(PasswordChecker("12345").check_common_passwords())
+    
+    def test_passwords_api(self):
+        self.assertEqual(PasswordChecker("rugthrtfjkvdrsfkjghdghdeugvdeju").check_pwned_api(),0);
+        self.assertGreaterEqual(PasswordChecker("password123").check_pwned_api(),1)
+
