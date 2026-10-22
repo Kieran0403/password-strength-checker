@@ -1,4 +1,4 @@
-import string,re
+import re
 import requests,hashlib
 class PasswordChecker:
     def __init__(self,password):
@@ -95,23 +95,22 @@ class PasswordChecker:
             headers = {'User-Agent': 'Student-Project'}
             #Contact the API with the relevant info
             response = requests.get(url, headers=headers, timeout=5)
-            
-            if response.status_code != 200:
-                print(f"Error fetching data from API: Status code {response.status_code}")
-                return False
-                
-            #Parse the response. The API returns lines with suffix and count
-            hashes = (line.split(':') for line in response.text.splitlines())
-            
-            #Check if inputted hashed password suffix matches any in the returned list
-            for target_suffix, count in hashes:
-                if target_suffix == suffix:
-                    return int(count)  # Found a match and return breach count.
-            
-            return False  # Password was not found in any data breaches
+            response.raise_for_status() #Catches any error codes
+        
         except requests.RequestException as e:
             print(f"API connection error: {e}")
-            return False
+            return None
+
+        #Parse the response. The API returns lines with suffix and count
+        hashes = (line.split(':') for line in response.text.splitlines())
+        
+        #Check if inputted hashed password suffix matches any in the returned list
+        for target_suffix, count in hashes:
+            if target_suffix == suffix:
+                return int(count)  # Found a match and return breach count.
+        
+        return 0  # Password was not found in any data breaches
+        
 
     def calculate_score(self):
         """Method to calcuate the score, if password common or pwned, immediatley very weak
@@ -122,7 +121,7 @@ class PasswordChecker:
 
         # 1. Local Check if it's a blacklisted common password
         if self.is_common_password():
-            return "Very weak"
+            return "Very Weak"
 
         # 2. Check the API result
         leak_result = self.check_pwned_api()
